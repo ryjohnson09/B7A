@@ -14,9 +14,17 @@ library(lubridate)
 ## Read in data ------------------------------------------------
 B7A_metadata <- read_excel("data/raw/B7A_Listing_(Glomics)_10OCT2018.xlsx")
 
+humichip_samples <- read_tsv("data/processed/Merged_humichip_B7A.tsv", n_max = 1) %>%
+  select(starts_with("B7A")) %>%
+  colnames(.)
+
+geochip_samples <- read_tsv("data/processed/Merged_geochip_B7A.tsv", n_max = 1) %>%
+  select(starts_with("B7A")) %>%
+  colnames(.)
+
 ## Fix times ---------------------------------------------------
 
-B7A_fixed_times <- B7A_metadata %>%
+B7A_metadata <- B7A_metadata %>%
   
   # Sample date/time
   mutate(`Sample Time` = format(`Sample Time`, "%H:%M")) %>%
@@ -35,4 +43,36 @@ B7A_fixed_times <- B7A_metadata %>%
 
 
 ## Fix Inoculation doses ----------------------------------------
+B7A_metadata <- B7A_metadata %>%
+  
+  # Target dose
+  mutate(`Inoculum dose (Target)` = as.numeric(str_replace(
+    string = `Inoculum dose (Target)`, 
+    pattern = "\\sx\\s10", 
+    replacement = "e+"))) %>%
+  
+  # Target dose
+  mutate(`Inoculum dose (Actual)` = as.numeric(str_replace(
+    string = `Inoculum dose (Actual)`, 
+    pattern = "\\sx\\s10", 
+    replacement = "e+")))
+
+
+# Ensure all humichip samples & Geochip have a matching ID in metadata
+ID_test <- 1
+if(!is_empty(setdiff(humichip_samples, paste0(B7A_metadata$`Subject ID`, B7A_metadata$Sample)))){
+  ID_test <- 2
+}
+if(!is_empty(setdiff(geochip_samples, paste0(B7A_metadata$`Subject ID`, B7A_metadata$Sample)))){
+  ID_test <- 3
+}
+
+# Write final version
+if(ID_test == 1){
+  write_tsv(x = B7A_metadata, path = "data/processed/B7A_metadata.tsv")
+} else if (ID_test == 2){
+  message("Humichip sample not in B7A metadata excel file")
+} else {
+  message("Geochip sample not in B7A metadata excel file")
+}
 

@@ -106,5 +106,22 @@ humichip_data$subcategory2 <- toupper(humichip_data$subcategory2)
 humichip_data$subcategory2 <- gsub(pattern = " ", replacement = "_", humichip_data$subcategory2)
 
 
+
+## Fix Sample names (must be B7A###[ABC] format)
+humichip_data <- humichip_data %>%
+  rename(B7A037A = B7A37A,
+         B7A053A = B7A53A,
+         B7A065A = B7A65A,
+         B7A066A = B7A66A,
+         B7A004B = B7A4B,
+         B7A050B = B7A50B,
+         B7A070B = B7A70B,
+         B7A006C = B7A6C,
+         B7A010C = B7A10C,
+         B7A012C = B7A12C,
+         B7A043C = B7A43C)
+  
+  
+  
 # Return compiled data frame
 write_tsv(humichip_data, "data/processed/Merged_humichip_B7A.tsv")
