@@ -76,5 +76,35 @@ humichip_dups_to_remove <- humichip_data %>% # Pull out the dups with the least 
 humichip_data <- humichip_data %>%
   select(-humichip_dups_to_remove)
 
+# Remove the "2" from any remaining sample names
+colnames(humichip_data) <- str_replace(string = colnames(humichip_data), 
+                                       pattern = "(B7A.*)2$", 
+                                       replacement = "\\1")
+
+
 # Clean
-rm(humichip_dups, dups, humichip_dups_to_remove, origs)
+rm(dups, origs, humichip_dups_to_remove)
+
+
+
+## Fixing Category names ------------------------------------------------------
+
+# geneCategory
+humichip_data$geneCategory <- toupper(humichip_data$geneCategory)
+humichip_data$geneCategory <- gsub(pattern = " ", replacement = "_", humichip_data$geneCategory)
+
+# annotation
+humichip_data$annotation <- toupper(humichip_data$annotation)
+humichip_data$annotation <- gsub(pattern = " ", replacement = "_", humichip_data$annotation)
+
+# subcategory1
+humichip_data$subcategory1 <- toupper(humichip_data$subcategory1)
+humichip_data$subcategory1 <- gsub(pattern = " ", replacement = "_", humichip_data$subcategory1)
+
+# subcategory2
+humichip_data$subcategory2 <- toupper(humichip_data$subcategory2)
+humichip_data$subcategory2 <- gsub(pattern = " ", replacement = "_", humichip_data$subcategory2)
+
+
+# Return compiled data frame
+write_tsv(humichip_data, "data/processed/Merged_humichip_B7A.tsv")
