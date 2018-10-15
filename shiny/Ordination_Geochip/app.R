@@ -1,4 +1,4 @@
-# B7A Humichip Ordination App
+# B7A Geochip Ordination App
 
 library(shiny)
 library(tidyverse)
@@ -9,7 +9,7 @@ library(ggExtra)
 #######################
 #### Read in Files ####
 #######################
-humichip <- suppressWarnings(suppressMessages(read_tsv("Merged_humichip_B7A.tsv")))
+geochip <- suppressWarnings(suppressMessages(read_tsv("Merged_geochip_B7A.tsv")))
 metadata <- suppressWarnings(suppressMessages(read_tsv("B7A_metadata.tsv")))
 
 
@@ -22,9 +22,8 @@ matched_choices <- list("All Samples" = "all_samples",
 
 visit_choices <- c("A", "B", "C")
 
-probe_choices <- c("Functional", "Strain/Species", "All")
 
-geneCategory_choices <- c("All", unique(na.omit(humichip$geneCategory)))
+geneCategory_choices <- c("All", unique(na.omit(geochip$Gene_category)))
 
 ordination_choices <- list("PCA" = "PCA",
                            "DCA" = "DCA", 
@@ -45,7 +44,7 @@ point_size_choices <- list(
 
 ## UI ------------------------------------------------------------------------------------
 ui <- fluidPage(
-  titlePanel("Humichip B7A Ordination"),
+  titlePanel("Geochip B7A Ordination"),
   sidebarLayout(
     sidebarPanel(
       
@@ -83,16 +82,10 @@ ui <- fluidPage(
         
         column(12, 
                wellPanel(
-                 # Probe Type
-                 selectInput('probe', 'Probe Type:', choices = probe_choices, selected = "All"),
-                 helpText(code("Functional:"), " probes specific for functional genes", br(),
-                          code("Strain/Species:"), " probes specific for microbial species and strains", br(),
-                          code("All:"), " all probes included in analysis"),
-                 br(),
+                 
                  # Probe Functional Category
                  selectInput("geneCategory", "Probe Functional Category", choices = geneCategory_choices, selected = "All"),
-                 helpText("If ", code("Probe Type "), "= ", strong("Functional"), 
-                          ", can select by functional group")))),
+                 helpText("Geochip Functional Category")))),
       
       
       #################################
@@ -149,7 +142,7 @@ server <- function(input, output){
 ### Only keep patients with matched visits ###
 ##############################################
 
-  humichip_matched <- reactive({
+  geochip_matched <- reactive({
     if(input$matched == "matched_samples"){
       # Get vector of patients that have matched visits
       matched_samples <- metadata %>%
@@ -167,55 +160,50 @@ server <- function(input, output){
         pull(glomics_ID)
     }
       
-    # Subset the humichip data
-    humichip %>%
-      select_if(colnames(.) %in% c("Genbank ID", "gene", "species", "lineage",
-                                   "annotation", "geneCategory", "subcategory1",
-                                   "subcategory2", matched_samples))
+    # Subset the geochip data
+    geochip %>%
+      select_if(colnames(.) %in% c("Genbank ID", "Gene", "Organism", 
+                                   "Gene_category", "Subcategory1",
+                                   "Subcategory2", "Lineage", matched_samples))
     
   })
   
   
-  #############################
-  ### Functional or STR_SPE ###
-  #############################
+  #######################################
+  ### Filter by Probe Functional Type ###
+  #######################################
   
-  humichip_probe <- reactive({
-    if(input$probe == "Functional" & input$geneCategory == "All"){
-      humichip_matched() %>%
-        filter(gene != "STR_SPE")
-    } else if (input$probe == "Functional" & input$geneCategory != "All"){
-      humichip_matched() %>%
-        filter(gene != "STR_SPE") %>%
-        filter(geneCategory == input$geneCategory)
-    } else if (input$probe == "Strain/Species"){
-      humichip_matched() %>%
-        filter(gene == "STR_SPE")
+  geochip_probe <- reactive({
+    if(input$geneCategory != "All"){
+      geochip_matched() %>%
+        filter(Gene_category == input$geneCategory)
+    } else if (input$geneCategory == "All"){
+      geochip_matched() 
     } else {
-      humichip_matched()
+      stopApp()
     }
   })
 
   
   ##########################################
-  ### Convert Humichip to numeric matrix ###
+  ### Convert geochip to numeric matrix ###
   ##########################################
   
-  # Filer Humichip to only include specified Visit_Number samples
-  humichip_matrix <- reactive({
-    humichip1 <- humichip_probe() %>%
-      select(-`Genbank ID`, -gene, -species, -lineage,
-           -annotation, -geneCategory, -subcategory1,
-           -subcategory2)
+  # Filer geochip to only include specified Visit_Number samples
+  geochip_matrix <- reactive({
+    geochip1 <- geochip_probe() %>%
+      select(-`Genbank ID`, -Gene, -Organism, -Lineage,
+           -Gene_category, -Subcategory1,
+           -Subcategory2)
   
     # Set NA's to 0 and values not NA to original value
-    humichip1 <- humichip1 %>%
+    geochip1 <- geochip1 %>%
       mutate_all(funs(ifelse(is.na(.), 0, .)))
     
     # Remove rows that equal 0
-    humichip1 <- humichip1[rowSums(humichip1) != 0,]
+    geochip1 <- geochip1[rowSums(geochip1) != 0,]
     
-    as.matrix(humichip1)
+    as.matrix(geochip1)
   })
  
   
@@ -225,33 +213,33 @@ server <- function(input, output){
   #############################
   
   # Ordination choices
-  humichip_ord <- reactive({
+  geochip_ord <- reactive({
     # Perform PCA analysis using vegan
     if(input$ordination == "PCA"){
-      vegan::rda(t(humichip_matrix()))
+      vegan::rda(t(geochip_matrix()))
       
       # Perform DCA analysis using vegan
     } else if (input$ordination == "DCA") {
-      vegan::decorana(t(humichip_matrix()))
+      vegan::decorana(t(geochip_matrix()))
       
       # Perform PCoA using ape package
     } else if (input$ordination == "PCoA"){
       
-      humichip_dist <- vegan::vegdist(as.matrix(t(humichip_matrix())))
-      ape::pcoa(humichip_dist, correction = "none")
+      geochip_dist <- vegan::vegdist(as.matrix(t(geochip_matrix())))
+      ape::pcoa(geochip_dist, correction = "none")
     } else {
       stopApp()
     }
   })
   
   
-  humichip_coords <- reactive({
+  geochip_coords <- reactive({
     
     # PCA and DCA coordinates
     if(input$ordination == "PCA" | input$ordination == "DCA"){
       
       # Get the coordinated for the samples
-      ord_coords <- scores(humichip_ord(), display = "sites")
+      ord_coords <- scores(geochip_ord(), display = "sites")
       
       # Make tibble
       ord_coords <- as.data.frame(ord_coords) %>%
@@ -262,7 +250,7 @@ server <- function(input, output){
       # PCoA Coords
     } else if (input$ordination == "PCoA") {
       
-      ord_coords <- humichip_ord()$vectors[,1:2]
+      ord_coords <- geochip_ord()$vectors[,1:2]
       
       # Make tibble
       ord_coords <- as.data.frame(ord_coords) %>%
@@ -275,13 +263,13 @@ server <- function(input, output){
   })
   
   
-  humichip_prop_exp <- reactive({
+  geochip_prop_exp <- reactive({
     
     # Extract proportion explained by first couple PC's for PCA
     if (input$ordination == "PCA"){
-      summary(eigenvals(humichip_ord()))[2,] * 100
+      summary(eigenvals(geochip_ord()))[2,] * 100
     } else if (input$ordination == "PCoA"){
-      humichip_ord()$values$Relative_eig * 100
+      geochip_ord()$values$Relative_eig * 100
     } else {
       stopApp()
     }
@@ -292,9 +280,9 @@ server <- function(input, output){
   #### Merge coords into Metadata ####
   ####################################
   
-  humichip_coords_metadata <- reactive({
+  geochip_coords_metadata <- reactive({
     
-    humichip_coords() %>%
+    geochip_coords() %>%
       left_join(., metadata, by = c("glomics_ID")) %>%
       
       # Dummy column for Null coloring
@@ -330,15 +318,15 @@ server <- function(input, output){
     
     # PCA Plot
     if(input$ordination == "PCA"){
-      pca_plot <- ggplot(humichip_coords_metadata(),
+      pca_plot <- ggplot(geochip_coords_metadata(),
                          aes_string(x = "PC1", 
                                     y = "PC2", 
                                     color = my_fill,
                                     size = my_size)) +
         
         # Set up proportion explained
-        xlab(paste0("PC1(", round(humichip_prop_exp()[[1]], 2), "%)")) +
-        ylab(paste0("PC2(", round(humichip_prop_exp()[[2]], 2), "%)")) +
+        xlab(paste0("PC1(", round(geochip_prop_exp()[[1]], 2), "%)")) +
+        ylab(paste0("PC2(", round(geochip_prop_exp()[[2]], 2), "%)")) +
         geom_point(pch = 1, alpha = 1) +
         geom_point(pch = 19, alpha = 0.8) +
         ggtitle("PCA Analysis") +
@@ -365,7 +353,7 @@ server <- function(input, output){
       
       
       # DCA plot
-      dca_plot <- ggplot( humichip_coords_metadata(),
+      dca_plot <- ggplot( geochip_coords_metadata(),
                          aes_string(x = "DCA1",
                                     y = "DCA2", 
                                     color = my_fill,
@@ -397,14 +385,14 @@ server <- function(input, output){
     } else if (input$ordination == "PCoA"){
       
       # PCoA Plot
-      pcoa_plot <- ggplot( humichip_coords_metadata(), 
+      pcoa_plot <- ggplot( geochip_coords_metadata(), 
                           aes_string(x = "Axis.1", 
                                      y = "Axis.2", 
                                      color = my_fill, 
                                      size = my_size)) +
         scale_fill_discrete(name = "Visit Number") +
-        xlab(paste0("PCoA1(", round(humichip_prop_exp()[1], 2), "%)")) +
-        ylab(paste0("PCoA2(", round(humichip_prop_exp()[2], 2), "%)")) +
+        xlab(paste0("PCoA1(", round(geochip_prop_exp()[1], 2), "%)")) +
+        ylab(paste0("PCoA2(", round(geochip_prop_exp()[2], 2), "%)")) +
         geom_point(pch = 1, alpha = 1) +
         geom_point(pch = 19, alpha = 0.8) + 
         ggtitle("PCoA Analysis") + 
@@ -436,7 +424,7 @@ server <- function(input, output){
     print(plotInput())
   })
   
-  #output$table <- renderTable({ humichip_coords_metadata()})
+  #output$table <- renderTable({geochip_coords_metadata()})
   
   #####################
   ### Download plot ###
