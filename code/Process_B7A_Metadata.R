@@ -58,6 +58,10 @@ B7A_metadata <- B7A_metadata %>%
     replacement = "e+")))
 
 
+# Make glomics_id column
+B7A_metadata <- B7A_metadata %>%
+  unite(glomics_ID, c("Subject ID", "Sample"), remove = FALSE, sep = "")
+
 # Ensure all humichip samples & Geochip have a matching ID in metadata
 ID_test <- 1
 if(!is_empty(setdiff(humichip_samples, paste0(B7A_metadata$`Subject ID`, B7A_metadata$Sample)))){
@@ -66,6 +70,8 @@ if(!is_empty(setdiff(humichip_samples, paste0(B7A_metadata$`Subject ID`, B7A_met
 if(!is_empty(setdiff(geochip_samples, paste0(B7A_metadata$`Subject ID`, B7A_metadata$Sample)))){
   ID_test <- 3
 }
+
+
 
 # Write final version
 if(ID_test == 1){
