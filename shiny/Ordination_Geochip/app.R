@@ -151,10 +151,10 @@ ui <- fluidPage(
     
     # Plot
     mainPanel(
-      plotOutput("plot", width = "800px", height = "800px")
+      plotOutput("plot", width = "800px", height = "800px"),
       
       # Table to see patients (not needed, but useful for troubleshooting)
-      #fluidRow(column(12,tableOutput('table')))
+      fluidRow(column(12,tableOutput('table')))
     )))
       
 
@@ -514,7 +514,7 @@ server <- function(input, output){
     print(plotInput())
   })
   
-  #output$table <- renderTable({geochip_phylum()[1:5,]})
+  output$table <- renderTable({geochip_coords_metadata()})
   
   #####################
   ### Download plot ###

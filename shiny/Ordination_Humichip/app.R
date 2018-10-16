@@ -34,6 +34,16 @@ disease_choices <- c("All",
                      "No Disease", 
                      "Moderate / Severe Diarrhea")
 
+phylum_choices <- humichip %>%
+  filter(str_detect(lineage, "Bacteria")) %>%
+  filter(str_detect(lineage, ";phylum")) %>%
+  mutate(Phylum = gsub(x = lineage, # Phylum column
+                       pattern = ".*;phylum:(\\w*\\s*[-]*\\w*);.*", 
+                       replacement = "\\1")) %>%
+  select(Phylum) %>%
+  distinct() %>%
+  pull(Phylum)
+
 color_choices <- list(
   "None" = "None",
   "Visit" = "Sample",
@@ -103,7 +113,16 @@ ui <- fluidPage(
                  # Probe Functional Category
                  selectInput("geneCategory", "Probe Functional Category", choices = geneCategory_choices, selected = "All"),
                  helpText("If ", code("Probe Type "), "= ", strong("Functional"), 
-                          ", can select by functional group")))),
+                          ", can select by functional group"),
+                 
+                 # Select Phylum probes?
+                 h5("Phylum Specific Probes"),
+                 checkboxInput("select_phylum", label = "Select Phylum Probes?", value = FALSE),
+                 helpText("If selected, only probes from selected bacterial phlya will be included in analysis"),
+                 
+                 # Phyla output
+                 uiOutput("phyla"),
+                 helpText("Select probes based on bacterial phyla")))),
       
       
       #################################
@@ -139,10 +158,10 @@ ui <- fluidPage(
     
     # Plot
     mainPanel(
-      plotOutput("plot", width = "800px", height = "800px")
+      plotOutput("plot", width = "800px", height = "800px"),
       
       # Table to see patients (not needed, but useful for troubleshooting)
-      #fluidRow(column(12,tableOutput('table'))),
+      fluidRow(column(12,tableOutput('table')))
     )))
       
 
@@ -234,6 +253,41 @@ server <- function(input, output){
       humichip_disease()
     }
   })
+  
+  
+  ########################
+  ### Filter by Phylum ###
+  ########################
+  
+  humichip_phylum <- reactive({
+    
+    if(input$select_phylum){
+      humichip_probe() %>%
+        filter(!is.na(lineage)) %>%
+        filter(str_detect(lineage, "Bacteria")) %>%
+        filter(str_detect(lineage, ";phylum")) %>%
+        mutate(Phylum = gsub(x = lineage, # Phylum column
+                             pattern = ".*;phylum:(\\w*\\s*\\w*);.*", 
+                             replacement = "\\1")) %>%
+        filter(Phylum %in% input$phylum)
+      
+    } else if (!input$select_phylum) {
+      humichip_probe()
+    } else {
+      stopApp()
+    }
+  })
+  
+  #########################################
+  ### Render list of Phyla if applicable ##
+  #########################################
+  output$phyla <- renderUI({
+    
+    if(input$select_phylum){
+      checkboxGroupInput("phylum", "Select Phyla:",
+                         choices = phylum_choices, inline = TRUE)
+    }
+  })
 
   
   ##########################################
@@ -242,10 +296,8 @@ server <- function(input, output){
   
   # Filer Humichip to only include specified Visit_Number samples
   humichip_matrix <- reactive({
-    humichip1 <- humichip_probe() %>%
-      select(-`Genbank ID`, -gene, -species, -lineage,
-           -annotation, -geneCategory, -subcategory1,
-           -subcategory2)
+    humichip1 <- humichip_phylum() %>%
+      select(starts_with("B7A"))
   
     # Set NA's to 0 and values not NA to original value
     humichip1 <- humichip1 %>%
@@ -475,7 +527,7 @@ server <- function(input, output){
     print(plotInput())
   })
   
-  #output$table <- renderTable({ humichip_coords_metadata()})
+  output$table <- renderTable({humichip_coords_metadata()})
   
   #####################
   ### Download plot ###
