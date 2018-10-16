@@ -29,6 +29,10 @@ ordination_choices <- list("PCA" = "PCA",
                            "DCA" = "DCA", 
                            "PCoA" = "PCoA")
 
+disease_choices <- c("All", 
+                     "No Disease", 
+                     "Moderate / Severe Diarrhea")
+
 color_choices <- list(
   "None" = "None",
   "Visit" = "Sample",
@@ -70,7 +74,14 @@ ui <- fluidPage(
                                     inline = TRUE),
                  helpText(code("A:"), " Sample prior to innoculation"),
                  helpText(code("B:"), " Sample at acute symtoms or 5 days post innoculation, prior to antibiotics"),
-                 helpText(code("C:"), " Convalescent Sample (~20-30 days post antibiotics)")))),
+                 helpText(code("C:"), " Convalescent Sample (~20-30 days post antibiotics)"),
+                 
+                 br(),
+                 
+                 # Disease Severity
+                 selectInput("disease_severity", "Disease:", choices = disease_choices, selected = "All"),
+                 helpText("Select patients that either did or did not develop moderate to severe diarrhea", br(),
+                          code("All:"), " all paitients included in analysis")))),
       
       
       
@@ -168,6 +179,31 @@ server <- function(input, output){
     
   })
   
+  ##############################
+  ### Subset by Disease Type ###
+  ##############################
+  
+  geochip_disease <- reactive({
+    if(input$disease_severity == "Moderate / Severe Diarrhea"){
+      disease_samples <- metadata %>%
+        filter(`Moderate-Severe diarrhea Yes/No` == "Yes") %>%
+        pull(glomics_ID)
+    } else if (input$disease_severity == "No Disease"){
+      disease_samples <- metadata %>%
+        filter(`Moderate-Severe diarrhea Yes/No` == "No") %>%
+        pull(glomics_ID)
+    } else {
+      disease_samples <- metadata %>%
+        pull(glomics_ID)
+    }
+    
+    # Subset the humichip data
+    geochip_matched() %>%
+      select_if(colnames(.) %in% c("Genbank ID", "Gene", "Organism", 
+                                   "Gene_category", "Subcategory1",
+                                   "Subcategory2", "Lineage", disease_samples))
+  })
+  
   
   #######################################
   ### Filter by Probe Functional Type ###
@@ -175,10 +211,10 @@ server <- function(input, output){
   
   geochip_probe <- reactive({
     if(input$geneCategory != "All"){
-      geochip_matched() %>%
+      geochip_disease() %>%
         filter(Gene_category == input$geneCategory)
     } else if (input$geneCategory == "All"){
-      geochip_matched() 
+      geochip_disease() 
     } else {
       stopApp()
     }
