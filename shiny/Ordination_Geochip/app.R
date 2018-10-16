@@ -22,7 +22,6 @@ matched_choices <- list("All Samples" = "all_samples",
 
 visit_choices <- c("A", "B", "C")
 
-
 geneCategory_choices <- c("All", unique(na.omit(geochip$Gene_category)))
 
 ordination_choices <- list("PCA" = "PCA",
@@ -32,6 +31,17 @@ ordination_choices <- list("PCA" = "PCA",
 disease_choices <- c("All", 
                      "No Disease", 
                      "Moderate / Severe Diarrhea")
+
+phylum_choices <- geochip %>%
+  filter(str_detect(Lineage, "Bacteria")) %>%
+  filter(str_detect(Lineage, ";phylum")) %>%
+  mutate(Phylum = gsub(x = Lineage, # Phylum column
+                       pattern = ".*;phylum:(\\w*\\s*[-]*\\w*);.*", 
+                       replacement = "\\1")) %>%
+  select(Phylum) %>%
+  distinct() %>%
+  pull(Phylum)
+
 
 color_choices <- list(
   "None" = "None",
@@ -96,7 +106,16 @@ ui <- fluidPage(
                  
                  # Probe Functional Category
                  selectInput("geneCategory", "Probe Functional Category", choices = geneCategory_choices, selected = "All"),
-                 helpText("Geochip Functional Category")))),
+                 helpText("Geochip Functional Category"), br(),
+                 
+                 # Select Phylum probes?
+                 h5("Phylum Specific Probes"),
+                 checkboxInput("select_phylum", label = "Select Phylum Probes?", value = FALSE),
+                 helpText("If selected, only probes from selected bacterial phlya will be included in analysis"),
+                 
+                 # Phyla output
+                 uiOutput("phyla"),
+                 helpText("Select probes based on bacterial phyla")))),
       
       
       #################################
@@ -135,7 +154,7 @@ ui <- fluidPage(
       plotOutput("plot", width = "800px", height = "800px")
       
       # Table to see patients (not needed, but useful for troubleshooting)
-      #fluidRow(column(12,tableOutput('table'))),
+      #fluidRow(column(12,tableOutput('table')))
     )))
       
 
@@ -197,7 +216,7 @@ server <- function(input, output){
         pull(glomics_ID)
     }
     
-    # Subset the humichip data
+    # Subset the geochip data
     geochip_matched() %>%
       select_if(colnames(.) %in% c("Genbank ID", "Gene", "Organism", 
                                    "Gene_category", "Subcategory1",
@@ -219,7 +238,44 @@ server <- function(input, output){
       stopApp()
     }
   })
+  
+  
+  
+  ########################
+  ### Filter by Phylum ###
+  ########################
+  
+  geochip_phylum <- reactive({
+      
+    if(input$select_phylum){
+      geochip_probe() %>%
+        filter(!is.na(Lineage)) %>%
+        filter(str_detect(Lineage, "Bacteria")) %>%
+        filter(str_detect(Lineage, ";phylum")) %>%
+        mutate(Phylum = gsub(x = Lineage, # Phylum column
+                             pattern = ".*;phylum:(\\w*\\s*\\w*);.*", 
+                             replacement = "\\1")) %>%
+        filter(Phylum %in% input$phylum)
+      
+    } else if (!input$select_phylum) {
+      geochip_probe()
+    } else {
+      stopApp()
+    }
+  })
+  
+  #########################################
+  ### Render list of Phyla if applicable ##
+  #########################################
+  output$phyla <- renderUI({
 
+    if(input$select_phylum){
+      checkboxGroupInput("phylum", "Select Phyla:",
+                         choices = phylum_choices, inline = TRUE)
+    }
+  })
+  
+  
   
   ##########################################
   ### Convert geochip to numeric matrix ###
@@ -227,10 +283,8 @@ server <- function(input, output){
   
   # Filer geochip to only include specified Visit_Number samples
   geochip_matrix <- reactive({
-    geochip1 <- geochip_probe() %>%
-      select(-`Genbank ID`, -Gene, -Organism, -Lineage,
-           -Gene_category, -Subcategory1,
-           -Subcategory2)
+    geochip1 <- geochip_phylum() %>%
+      select(starts_with("B7A"))
   
     # Set NA's to 0 and values not NA to original value
     geochip1 <- geochip1 %>%
@@ -460,7 +514,7 @@ server <- function(input, output){
     print(plotInput())
   })
   
-  #output$table <- renderTable({geochip_coords_metadata()})
+  #output$table <- renderTable({geochip_phylum()[1:5,]})
   
   #####################
   ### Download plot ###
