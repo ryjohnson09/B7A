@@ -158,10 +158,10 @@ ui <- fluidPage(
     
     # Plot
     mainPanel(
-      plotOutput("plot", width = "800px", height = "800px"),
+      plotOutput("plot", width = "800px", height = "800px")
       
       # Table to see patients (not needed, but useful for troubleshooting)
-      fluidRow(column(12,tableOutput('table')))
+      #fluidRow(column(12,tableOutput('table')))
     )))
       
 
