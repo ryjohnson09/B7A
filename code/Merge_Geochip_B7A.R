@@ -102,7 +102,8 @@ geochip_data$Subcategory1 <- toupper(geochip_data$Subcategory1)
 geochip_data$Subcategory1 <- gsub(pattern = " ", replacement = "_", geochip_data$Subcategory1)
 
 geochip_data <- geochip_data %>%
-  mutate(Subcategory1 = ifelse(Subcategory1 == "EFFECTOR", "EFFECTOR_PROTEIN", Subcategory1))
+  mutate(Subcategory1 = ifelse(Subcategory1 == "EFFECTOR", "EFFECTOR_PROTEIN", Subcategory1)) %>%
+  mutate(Subcategory1 = ifelse(Subcategory1 == "TYPR_III_SECRETION_SYSTEM", "TYPE_III_SECRETION_SYSTEM", Subcategory1))
 
 # Fix Subcategory2
 geochip_data$Subcategory2 <- toupper(geochip_data$Subcategory2)
