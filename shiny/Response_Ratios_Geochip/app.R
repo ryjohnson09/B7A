@@ -141,10 +141,10 @@ ui <- fluidPage(
     # Plot
     mainPanel(
       plotOutput("plot", width = "800px", height = "800px"),
-      br(),
+      br()
       
       # Table to see patients (not needed, but useful for troubleshooting)
-      fluidRow(column(12,tableOutput('table')))
+      #fluidRow(column(12,tableOutput('table')))
     )))
 
 
@@ -477,7 +477,7 @@ server <- function(input, output){
   
   
   
-  output$table <- renderTable({head(geochip_RR(), 100)})
+#  output$table <- renderTable({head(geochip_RR(), 100)})
   
 }
 
