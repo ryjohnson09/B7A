@@ -167,10 +167,17 @@ ui <- fluidPage(
 
 ## Server ---------------------------------------------------------------------------------
 server <- function(input, output){
+  
+  ##############################################
+  ### Filter metadata for samples in Geochip ###
+  ##############################################
+  
+  metadata <- metadata %>%
+    filter(glomics_ID %in% colnames(geochip))
 
-##############################################
-### Only keep patients with matched visits ###
-##############################################
+  ##############################################
+  ### Only keep patients with matched visits ###
+  ##############################################
 
   geochip_matched <- reactive({
     if(input$matched == "matched_samples"){
