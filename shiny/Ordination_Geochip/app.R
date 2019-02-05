@@ -521,7 +521,7 @@ server <- function(input, output){
     print(plotInput())
   })
   
-  output$table <- renderTable({geochip_coords_metadata()})
+  #output$table <- renderTable({geochip_coords_metadata()})
   
   #####################
   ### Download plot ###
