@@ -28,22 +28,59 @@ for (hchip in humichip_files){
   if(is_empty(humichip_data)){
     
     # Read in hchip
-    humichip_data <- suppressWarnings(suppressMessages((read_tsv(hchip, guess_max = 100000)))) %>%
-      select(-uniqueID,	-proteinGI,	-accessionNo)
+    humichip_data <- read_tsv(hchip, col_types = cols(`Genbank ID` = col_character(),
+                                                      uniqueID = col_character(),
+                                                      proteinGI = col_character(),
+                                                      accessionNo = col_character(),
+                                                      gene = col_character(),
+                                                      species = col_character(),
+                                                      lineage = col_character(),
+                                                      annotation = col_character(), 
+                                                      geneCategory = col_character(),
+                                                      subcategory1 = col_character(),
+                                                      subcategory2 = col_character(),
+                                                      .default = col_double())) %>%
+      select(-proteinGI,	-accessionNo)
   } else {
     
     # Read in hchip and merge into humichip_data
-    humichip_temp <-  suppressWarnings(suppressMessages((read_tsv(hchip, guess_max = 100000)))) %>%
-      select(-uniqueID,	-proteinGI,	-accessionNo)
+    humichip_temp <-  read_tsv(hchip, col_types = cols(`Genbank ID` = col_character(),
+                                                       uniqueID = col_character(),
+                                                       proteinGI = col_character(),
+                                                       accessionNo = col_character(),
+                                                       gene = col_character(),
+                                                       species = col_character(),
+                                                       lineage = col_character(),
+                                                       annotation = col_character(), 
+                                                       geneCategory = col_character(),
+                                                       subcategory1 = col_character(),
+                                                       subcategory2 = col_character(),
+                                                       .default = col_double())) %>%
+      select(-proteinGI,	-accessionNo)
     
-    humichip_data <- suppressWarnings(suppressMessages((full_join(humichip_data, humichip_temp, 
-                               by = c("Genbank ID", "gene", "species", "lineage", "annotation", 
-                                      "geneCategory", "subcategory1", "subcategory2")))))
+    humichip_data <- full_join(humichip_data, humichip_temp, 
+                               by = c("Genbank ID", "uniqueID", "gene", "species", "lineage", "annotation", 
+                                      "geneCategory", "subcategory1", "subcategory2"))
   }
 }
 
 # Clean
 rm(humichip_temp, hchip, humichip_files)
+
+
+# Make sure each probe has a unique identifier. Turns out the 'uniqueID'
+#  is not trully unique so will merge Genbank ID and unique ID
+humichip_data <- humichip_data %>% 
+  unite("Genbank_UniqueID", c("Genbank ID", "uniqueID"))
+
+# Check that the Genbank_UniqueID column has no duplicates
+ensure_no_dups <- sum(duplicated(humichip_data$Genbank_UniqueID) + 
+                        duplicated(humichip_data$Genbank_UniqueID, fromLast = TRUE))
+
+# Stop execution if duplicates found
+if(ensure_no_dups != 0){
+  stop("Non unique probe identifiers!")
+}
 
 # Remove any extraneous text at end of sample headers
 colnames(humichip_data) <- str_replace(string = colnames(humichip_data), 
