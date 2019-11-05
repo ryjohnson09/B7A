@@ -145,7 +145,7 @@ $(results_dir)ps2.rds $(results_dir)prev_plot_before_filt.png : $(results_dir)se
 	R -e "source('$(code_dir)phyloseq_filtering.R', echo=T)"
 
 
-# Abundance Plots
+# Barplots
 # Depends on:	$(results_dir)ps2.rds
 # 		$(code_dir)abundance_barplots.R
 # Produces:	$(barplot_dir)barplot_phylum_patient.png
@@ -175,3 +175,28 @@ all_barplots: $(barplots)
 $(barplots) : $(results_dir)ps2.rds\
 	      $(code_dir)abundance_barplots.R
 	R -e "source('$(code_dir)abundance_barplots.R', echo=T)"
+
+
+
+# Heatmaps
+# Depends on:   $(results_dir)ps2.rds
+#               $(code_dir)heatmaps.R
+# Produces:     $(heatmap_dir)ASV_heatmap_mod_sev.png
+#               $(heatmap_dir)genus_heatmap_mod_sev.png
+#               $(heatmap_dir)genus_heatmap_mean_mod_sev.png
+#               $(heatmap_dir)genus_heatmap_mean_naive.png
+#               $(heatmap_dir)genus_heatmap_mean_abx.png
+heatmap_dir = results/microbiome_analysis/heatmaps/
+
+heatmaps = $(heatmap_dir)ASV_heatmap_mod_sev.png\
+           $(heatmap_dir)genus_heatmap_mod_sev.png\
+           $(heatmap_dir)genus_heatmap_mean_mod_sev.png\
+           $(heatmap_dir)genus_heatmap_mean_naive.png\
+           $(heatmap_dir)genus_heatmap_mean_abx.png
+
+all_heatmaps: $(heatmaps)
+.PHONY: all_heatmaps
+
+$(heatmaps) : $(results_dir)ps2.rds\
+              $(code_dir)heatmaps.R
+	R -e "source('$(code_dir)heatmaps.R', echo=T)"
