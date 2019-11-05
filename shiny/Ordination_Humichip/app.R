@@ -199,7 +199,7 @@ server <- function(input, output){
       
     # Subset the humichip data
     humichip %>%
-      select_if(colnames(.) %in% c("Genbank ID", "gene", "species", "lineage",
+      select_at(c("Genbank ID", "gene", "species", "lineage",
                                    "annotation", "geneCategory", "subcategory1",
                                    "subcategory2", matched_samples))
     
@@ -226,7 +226,7 @@ server <- function(input, output){
     
     # Subset the humichip data
     humichip_matched() %>%
-      select_if(colnames(.) %in% c("Genbank ID", "gene", "species", "lineage",
+      select_at(c("Genbank ID", "gene", "species", "lineage",
                                    "annotation", "geneCategory", "subcategory1",
                                    "subcategory2", disease_samples))
   })
