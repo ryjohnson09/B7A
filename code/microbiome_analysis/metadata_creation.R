@@ -1,4 +1,4 @@
-# Metadata Creation
+# metadata_reation.R
 # Ryan Johnson
 # 4 Nov 2019
 # Generate Metadata to analyze the B7A micrbiome data
@@ -66,4 +66,4 @@ metadata_merge_abx <- metadata_merge_abx %>%
 
 
 # Write to file -----------------------------------------------------------------------------
-write_csv(metadata_merge_abx, "B7A_metadata_clean.csv")
+write_csv(metadata_merge_abx, "data/processed/microbiome_analysis/B7A_metadata_clean.csv")
