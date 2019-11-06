@@ -227,3 +227,33 @@ all_abun_other_plots: $(abun_other_plots)
 $(abun_other_plots) : $(results_dir)ps2.rds\
               	      $(code_dir)abundance_other_plots.R
 	R -e "source('$(code_dir)abundance_other_plots.R', echo=T)"
+
+
+# Ordination Analysis
+# Depends on:   $(results_dir)ps2.rds
+#               $(code_dir)ordination_analysis.R
+# Produces:     $(ordination_dir)bray_nmds_day.png
+#               $(ordination_dir)bray_pcoa_day.png
+#               $(ordination_dir)bray_nmds_mod_sev.png
+#               $(ordination_dir)bray_pcoa_mod_sev.png
+#               $(ordination_dir)bray_nmds_naive.png
+#               $(ordination_dir)bray_pcoa_naive.png
+#		$(ordination_dir)bray_nmds_abx.png
+#		$(ordination_dir)bray_pcoa_abx.png
+ordination_dir = results/microbiome_analysis/ordination_analysis/
+
+ordination_plots = $(ordination_dir)bray_nmds_day.png\
+                   $(ordination_dir)bray_pcoa_day.png\
+                   $(ordination_dir)bray_nmds_mod_sev.png\
+                   $(ordination_dir)bray_pcoa_mod_sev.png\
+                   $(ordination_dir)bray_nmds_naive.png\
+                   $(ordination_dir)bray_pcoa_naive.png\
+		   $(ordination_dir)bray_nmds_abx.png\
+		   $(ordination_dir)bray_pcoa_abx.png
+
+all_ordination_plots: $(ordination_plots)
+.PHONY: all_ordination_plots
+
+$(ordination_plots) : $(results_dir)ps2.rds\
+                      $(code_dir)ordination_analysis.R
+	R -e "source('$(code_dir)ordination_analysis.R', echo=T)"
