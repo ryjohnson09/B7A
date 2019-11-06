@@ -31,6 +31,20 @@ ord_pcoa_bray <- ordinate(ps_prop, method="PCoA", distance="bray")
 ord_nmds_bray_data <- as_tibble(plot_ordination(ps_prop, ord_nmds_bray)$data, rownames = "Sample")
 ord_pcoa_bray_data <- as_tibble(plot_ordination(ps_prop, ord_pcoa_bray)$data, rownames = "Sample")
 
+# Factor
+ord_nmds_bray_data$Mod.Sev.Diarrhea <- factor(ord_nmds_bray_data$Mod.Sev.Diarrhea, 
+                                              levels = c("Y", "N"))
+ord_nmds_bray_data$Naïve <- factor(ord_nmds_bray_data$Naïve, 
+                                              levels = c("Y", "N"))
+ord_nmds_bray_data$pre_post_abx <- factor(ord_nmds_bray_data$pre_post_abx, 
+                                   levels = c("Pre", "Post"))
+ord_pcoa_bray_data$Mod.Sev.Diarrhea <- factor(ord_nmds_bray_data$Mod.Sev.Diarrhea, 
+                                              levels = c("Y", "N"))
+ord_pcoa_bray_data$Naïve <- factor(ord_nmds_bray_data$Naïve, 
+                                   levels = c("Y", "N"))
+ord_pcoa_bray_data$pre_post_abx <- factor(ord_nmds_bray_data$pre_post_abx, 
+                                          levels = c("Pre", "Post"))
+
 
 ## Plots -----------------------------------------------------------------
 # Get colors
@@ -40,7 +54,8 @@ getPalette <- colorRampPalette(brewer.pal(
 # Bray NMDS
 bray_nmds_day <- ggplot(data = ord_nmds_bray_data, aes(x = NMDS1, y = NMDS2)) +
   geom_point(aes(color = factor(Study_Day)), size = 2) +
-  labs(title = "Bray-Curtis: NMDS") +
+  labs(title = "Bray-Curtis: NMDS",
+       color = "Study Day") +
   scale_color_manual(values = getPalette(length(unique(ord_nmds_bray_data$Study_Day)))) +
   theme(
     plot.title = element_text(size = 15, face = "bold"),
@@ -61,7 +76,8 @@ ggsave(plot = bray_nmds_day,
 # Bray pcoa
 bray_pcoa_day <- ggplot(data = ord_pcoa_bray_data, aes(x = Axis.1, y = Axis.2)) +
   geom_point(aes(color = factor(Study_Day)), size = 2) +
-  labs(title = "Bray-Curtis: PCoA") +
+  labs(title = "Bray-Curtis: PCoA",
+       color = "Study Day") +
   scale_color_manual(values = getPalette(length(unique(ord_nmds_bray_data$Study_Day)))) +
   theme(
     plot.title = element_text(size = 15, face = "bold"),
@@ -83,7 +99,8 @@ ggsave(plot = bray_pcoa_day,
 bray_nmds_mod_sev <- ggplot(data = ord_nmds_bray_data, aes(x = NMDS1, y = NMDS2)) +
   geom_point(aes(color = Mod.Sev.Diarrhea), size = 2) +
   labs(title = "Bray-Curtis: NMDS",
-       subtitle = "Colored by Mod-Sev Diarrhea") +
+       subtitle = "Colored by Mod-Sev Diarrhea",
+       color = "Mod to Severe\nDiarrhea?") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(
@@ -106,7 +123,8 @@ ggsave(plot = bray_nmds_mod_sev,
 bray_pcoa_mod_sev <- ggplot(data = ord_pcoa_bray_data, aes(x = Axis.1, y = Axis.2)) +
   geom_point(aes(color = Mod.Sev.Diarrhea), size = 2) +
   labs(title = "Bray-Curtis: PCoA",
-       subtitle = "Colored by Mod-Sev Diarrhea") +
+       subtitle = "Colored by Mod-Sev Diarrhea",
+       color = "Mod to Severe\nDiarrhea?") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(
@@ -129,7 +147,8 @@ ggsave(plot = bray_pcoa_mod_sev,
 bray_nmds_naive <- ggplot(data = ord_nmds_bray_data, aes(x = NMDS1, y = NMDS2)) +
   geom_point(aes(color = Naïve), size = 2) +
   labs(title = "Bray-Curtis: NMDS",
-       subtitle = "Colored by Naive (Yes or No)") +
+       subtitle = "Colored by Naive (Yes or No)",
+       color = "Naïve?") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(
@@ -152,7 +171,8 @@ ggsave(plot = bray_nmds_naive,
 bray_pcoa_naive <- ggplot(data = ord_pcoa_bray_data, aes(x = Axis.1, y = Axis.2)) +
   geom_point(aes(color = Naïve), size = 2) +
   labs(title = "Bray-Curtis: PCoA",
-       subtitle = "Colored by Mod-Sev Diarrhea") +
+       subtitle = "Colored by Mod-Sev Diarrhea",
+       color = "Naïve?") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(
@@ -175,7 +195,8 @@ ggsave(plot = bray_pcoa_naive,
 bray_nmds_abx <- ggplot(data = ord_nmds_bray_data, aes(x = NMDS1, y = NMDS2)) +
   geom_point(aes(color = pre_post_abx), size = 2) +
   labs(title = "Bray-Curtis: NMDS",
-       subtitle = "Pre or Post Abx Treatment") +
+       subtitle = "Pre or Post Abx Treatment",
+       color = "Pre or Post\nAntibiotics") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(
@@ -198,7 +219,8 @@ ggsave(plot = bray_nmds_abx,
 bray_pcoa_abx <- ggplot(data = ord_pcoa_bray_data, aes(x = Axis.1, y = Axis.2)) +
   geom_point(aes(color = pre_post_abx), size = 2) +
   labs(title = "Bray-Curtis: PCoA",
-       subtitle = "Pre or Post Abx Treatment") +
+       subtitle = "Pre or Post Abx Treatment",
+       color = "Pre or Post\nAntibiotics") +
   scale_color_colorblind() +
   facet_wrap(~Study_Day) +
   theme(

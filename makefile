@@ -257,3 +257,37 @@ all_ordination_plots: $(ordination_plots)
 $(ordination_plots) : $(results_dir)ps2.rds\
                       $(code_dir)ordination_analysis.R
 	R -e "source('$(code_dir)ordination_analysis.R', echo=T)"
+
+
+# Alpha Diversity Analysis
+# Depends on:   $(results_dir)ps2.rds
+#               $(code_dir)alpha_diversity_analysis.R
+#		$(processed_dir)B7A_metadata_clean.csv
+# Produces:     $(alpha_dir)observed_mod_sev.png
+#               $(alpha_dir)observed_naive.png
+#               $(alpha_dir)observed_abx.png
+#               $(alpha_dir)invSimpson_mod_sev.png
+#               $(alpha_dir)invSimpson_naive.png
+#               $(alpha_dir)invSimpson_abx.png
+#               $(alpha_dir)shannon_mod_sev.png
+#               $(alpha_dir)shannon_naive.png
+#               $(alpha_dir)shannon_abx.png
+alpha_dir = results/microbiome_analysis/alpha_diversity_analysis/
+
+alpha_plots = $(alpha_dir)observed_mod_sev.png\
+              $(alpha_dir)observed_naive.png\
+              $(alpha_dir)observed_abx.png\
+              $(alpha_dir)invSimpson_mod_sev.png\
+              $(alpha_dir)invSimpson_naive.png\
+              $(alpha_dir)invSimpson_abx.png\
+              $(alpha_dir)shannon_mod_sev.png\
+              $(alpha_dir)shannon_naive.png\
+              $(alpha_dir)shannon_abx.png
+
+all_alpha_plots: $(alpha_plots)
+.PHONY: all_alpha_plots
+
+$(alpha_plots) : $(results_dir)ps2.rds\
+		 $(processed_dir)B7A_metadata_clean.csv\
+                 $(code_dir)alpha_diversity_analysis.R
+	R -e "source('$(code_dir)alpha_diversity_analysis.R', echo=T)"
