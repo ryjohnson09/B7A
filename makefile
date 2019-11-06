@@ -200,3 +200,30 @@ all_heatmaps: $(heatmaps)
 $(heatmaps) : $(results_dir)ps2.rds\
               $(code_dir)heatmaps.R
 	R -e "source('$(code_dir)heatmaps.R', echo=T)"
+
+
+# Abundance Other Plots
+# Depends on:   $(results_dir)ps2.rds
+#               $(code_dir)abundance_other_plots.R
+# Produces:     $(abun_other_dir)phylum_line_mod_sev.png
+#		$(abun_other_dir)phylum_line_naive.png
+#               $(abun_other_dir)phylum_line_abx.png
+#               $(abun_other_dir)genus_line_mod_sev.png
+#               $(abun_other_dir)genus_line_naive.png
+#               $(abun_other_dir)genus_line_abx.png
+
+abun_other_dir = results/microbiome_analysis/abundance_other_plots/
+
+abun_other_plots = $(abun_other_dir)phylum_line_mod_sev.png\
+           	   $(abun_other_dir)phylum_line_naive.png\
+                   $(abun_other_dir)phylum_line_abx.png\
+                   $(abun_other_dir)genus_line_mod_sev.png\
+                   $(abun_other_dir)genus_line_naive.png\
+                   $(abun_other_dir)genus_line_abx.png
+
+all_abun_other_plots: $(abun_other_plots)
+.PHONY: all_abun_other_plots
+
+$(abun_other_plots) : $(results_dir)ps2.rds\
+              	      $(code_dir)abundance_other_plots.R
+	R -e "source('$(code_dir)abundance_other_plots.R', echo=T)"
